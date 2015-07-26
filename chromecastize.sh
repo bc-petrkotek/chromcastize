@@ -80,7 +80,7 @@ is_supported_acodec() {
 }
 
 is_supported_ext() {
-  EXT=`echo $1 | tr '[:upper:]' '[:lower:]'`
+  local EXT=`echo $1 | tr '[:upper:]' '[:lower:]'`
   in_array "$EXT" "${SUPPORTED_EXTENSIONS[@]}"
 }
 
@@ -91,42 +91,40 @@ mark_as_good() {
 
 on_success() {
   echo ""
-  FILENAME="$1"
-  BASENAME=`basename "$FILENAME"`
-  echo "- conversion succeeded; file '$FILENAME.$OUTPUT_GFORMAT' saved"
+  echo "- conversion succeeded; file '$1.$OUTPUT_GFORMAT' saved"
   mark_as_good "$FILENAME.$OUTPUT_GFORMAT"
-  echo "- renaming original file as '$FILENAME.bak'"
-  mv "$FILENAME" "$FILENAME.bak"
+  echo "- renaming original file as '$1.bak'"
+  mv "$1" "$1.bak"
 }
 
 on_failure() {
   echo ""
-  FILENAME="$1"
-  echo "- failed to convert '$FILENAME' (or conversion has been interrupted)"
+  echo "- failed to convert '$1' (or conversion has been interrupted)"
   echo "- deleting partially converted file..."
-  rm "$FILENAME.mkv" &> /dev/null
+  rm "$1.mkv" &> /dev/null
 }
 
 process_file() {
   echo "==========="
-  echo "Processing: $FILENAME"
+  echo "Processing: $1"
 
   # test extension
-  BASENAME=$(basename "$FILENAME")
-  EXTENSION="${BASENAME##*.}"
+  local BASENAME=$(basename "$1")
+  local EXTENSION="${BASENAME##*.}"
   if ! is_supported_ext "$EXTENSION"; then
     echo "- not a video format, skipping"
     continue
   fi
 
   # test if it's an `chromecastize` generated file
-  if grep -Fxq "`$REALPATH "$FILENAME"`" $HOME/processed_files; then
+  if grep -Fxq "`$REALPATH "$1"`" $HOME/processed_files; then
     echo '- file was genereated by `chromecastize`, skipping'
     continue
   fi
 
   # test general format
-  INPUT_GFORMAT=`mediainfo --Inform="General;%Format%\n" "$FILENAME" | head -n1`
+  local INPUT_GFORMAT=`mediainfo --Inform="General;%Format%\n" "$1" | head -n1`
+  local OUTPUT_GFORMAT=""
   if is_supported_gformat "$INPUT_GFORMAT" && [ "$OVERRIDE_GFORMAT" = "" ] || [ "$OVERRIDE_GFORMAT" = "$EXTENSION" ]; then
     OUTPUT_GFORMAT="ok"
   else
@@ -136,7 +134,8 @@ process_file() {
   echo "- general: $INPUT_GFORMAT -> $OUTPUT_GFORMAT"
 
   # test video codec
-  INPUT_VCODEC=`mediainfo --Inform="Video;%Format%\n" "$FILENAME" | head -n1`
+  local INPUT_VCODEC=`mediainfo --Inform="Video;%Format%\n" "$1" | head -n1`
+  local OUTPUT_VCODEC=""
   if is_supported_vcodec "$INPUT_VCODEC"; then
     OUTPUT_VCODEC="copy"
   else
@@ -145,7 +144,8 @@ process_file() {
   echo "- video: $INPUT_VCODEC -> $OUTPUT_VCODEC"
 
   # test audio codec
-  INPUT_ACODEC=`mediainfo --Inform="Audio;%Format%\n" "$FILENAME" | head -n1`
+  local INPUT_ACODEC=`mediainfo --Inform="Audio;%Format%\n" "$1" | head -n1`
+  local OUTPUT_ACODEC=""
   if is_supported_acodec "$INPUT_ACODEC"; then
     OUTPUT_ACODEC="copy"
   else
@@ -155,10 +155,10 @@ process_file() {
 
   if [ "$OUTPUT_VCODEC" = "copy" ] && [ "$OUTPUT_ACODEC" = "copy" ] && [ "$OUTPUT_GFORMAT" = "ok" ]; then
     echo "- file should be playable by Chromecast!"
-    mark_as_good "$FILENAME"
+    mark_as_good "$1"
   else
-    echo "- video length: `mediainfo --Inform="General;%Duration/String3%" "$FILENAME"`"
-    $FFMPEG -loglevel error -stats -i "$FILENAME" -map 0 -scodec copy -vcodec "$OUTPUT_VCODEC" -acodec "$OUTPUT_ACODEC" "$FILENAME.$OUTPUT_GFORMAT" && on_success "$FILENAME" || on_failure "$FILENAME"
+    echo "- video length: `mediainfo --Inform="General;%Duration/String3%" "$1"`"
+    $FFMPEG -loglevel error -stats -i "$1" -map 0 -scodec copy -vcodec "$OUTPUT_VCODEC" -acodec "$OUTPUT_ACODEC" "$FILENAME.$OUTPUT_GFORMAT" && on_success "$1" || on_failure "$1"
     echo ""
   fi
 }
