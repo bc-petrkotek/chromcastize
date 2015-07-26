@@ -204,11 +204,12 @@ for FILENAME in "$@"; do
   elif ! [ -e "$FILENAME" ]; then
     echo "File not found ($FILENAME). Skipping..."
   elif [ -d "$FILENAME" ]; then
-    for F in $(find "$FILENAME" -type f); do
-      process_file $F
+    find "$FILENAME" -type f -print0 | while read -d $'\0' F
+    do
+      process_file "$F"
     done
   elif [ -f "$FILENAME" ]; then
-    process_file $FILENAME
+    process_file "$FILENAME"
   else
     echo "Invalid file ($FILENAME). Skipping..."
   fi
