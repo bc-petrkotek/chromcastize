@@ -158,7 +158,7 @@ process_file() {
     mark_as_good "$1"
   else
     echo "- video length: `mediainfo --Inform="General;%Duration/String3%" "$1"`"
-    $FFMPEG -loglevel error -stats -i "$1" -map 0 -scodec copy -vcodec "$OUTPUT_VCODEC" -acodec "$OUTPUT_ACODEC" "$1.$OUTPUT_GFORMAT" && on_success "$1" || on_failure "$1"
+    $FFMPEG -loglevel error -stats -i "$1" -map 0 -scodec copy -vcodec "$OUTPUT_VCODEC" -acodec "$OUTPUT_ACODEC" "$1.$OUTPUT_GFORMAT" </dev/null && on_success "$1" || on_failure "$1"
     echo ""
   fi
 }
@@ -204,11 +204,12 @@ for FILENAME in "$@"; do
   elif ! [ -e "$FILENAME" ]; then
     echo "File not found ($FILENAME). Skipping..."
   elif [ -d "$FILENAME" ]; then
-    for F in $(find "$FILENAME" -type f); do
-      process_file $F
+    find "$FILENAME" -type f -print0 | while read -d $'\0' F
+    do
+      process_file "$F"
     done
   elif [ -f "$FILENAME" ]; then
-    process_file $FILENAME
+    process_file "$FILENAME"
   else
     echo "Invalid file ($FILENAME). Skipping..."
   fi
