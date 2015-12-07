@@ -10,7 +10,7 @@ SUPPORTED_GFORMATS=('MPEG-4' 'Matroska')
 UNSUPPORTED_GFORMATS=('BDAV' 'AVI' 'Flash Video')
 
 SUPPORTED_VCODECS=('AVC')
-UNSUPPORTED_VCODECS=('MPEG-4 Visual' 'xvid' 'MPEG Video')
+UNSUPPORTED_VCODECS=('MPEG-4 Visual' 'xvid' 'MPEG Video', 'HEVC')
 
 SUPPORTED_ACODECS=('AAC' 'MPEG Audio' 'Vorbis' 'Ogg')
 UNSUPPORTED_ACODECS=('AC-3' 'DTS' 'PCM')
@@ -127,7 +127,7 @@ process_file() {
 
   # test general format
   INPUT_GFORMAT=`mediainfo --Inform="General;%Format%\n" "$FILENAME" | head -n1`
-  if is_supported_gformat "$INPUT_GFORMAT" && [ "$OVERRIDE_GFORMAT" = "" ] || [ "$OVERRIDE_GFORMAT" = "$EXTENSION" ]; then
+  if is_supported_gformat "$INPUT_GFORMAT" && [ "$OVERRIDE_GFORMAT" = "" ]; then
     OUTPUT_GFORMAT="ok"
   else
     # if override format is specified, use it; otherwise fall back to default format
