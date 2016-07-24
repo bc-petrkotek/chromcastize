@@ -128,12 +128,13 @@ process_file() {
 	# test general format
         INPUT_GFORMAT=`mediainfo --Inform="General;%Format%\n" "$FILENAME" | head -n1`
         if is_supported_gformat "$INPUT_GFORMAT" && [ "$OVERRIDE_GFORMAT" = "" ] || [ "$OVERRIDE_GFORMAT" = "$EXTENSION" ]; then
-                OUTPUT_GFORMAT="ok"
+                OUTPUT_GFORMAT="$INPUT_GFORMAT"
+                echo "- general: $INPUT_GFORMAT -> ok"
         else
                 # if override format is specified, use it; otherwise fall back to default format
                 OUTPUT_GFORMAT="${OVERRIDE_GFORMAT:-$DEFAULT_GFORMAT}"
+                echo "- general: $INPUT_GFORMAT -> $OUTPUT_GFORMAT"
         fi
-        echo "- general: $INPUT_GFORMAT -> $OUTPUT_GFORMAT"
 
         # test video codec
         INPUT_VCODEC=`mediainfo --Inform="Video;%Format%\n" "$FILENAME" | head -n1`
@@ -153,7 +154,7 @@ process_file() {
         fi
         echo "- audio: $INPUT_ACODEC -> $OUTPUT_ACODEC"
 
-        if [ "$OUTPUT_VCODEC" = "copy" ] && [ "$OUTPUT_ACODEC" = "copy" ] && [ "$OUTPUT_GFORMAT" = "ok" ]; then
+        if [ "$OUTPUT_VCODEC" = "copy" ] && [ "$OUTPUT_ACODEC" = "copy" ] && [ is_supported_gformat "$OUTPUT_GFORMAT" ]; then
                 echo "- file should be playable by Chromecast!"
 		mark_as_good "$FILENAME"
 	else
