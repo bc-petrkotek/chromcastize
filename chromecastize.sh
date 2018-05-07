@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 ##########
 # CONFIG #
 ##########
@@ -163,7 +164,11 @@ process_file() {
 		if [ "$OUTPUT_GFORMAT" = "ok" ]; then
 			OUTPUT_GFORMAT=$EXTENSION
 		fi
-		$FFMPEG -loglevel error -stats -i "$FILENAME" -map 0 -scodec copy -vcodec "$OUTPUT_VCODEC" -acodec "$OUTPUT_ACODEC" "$FILENAME.$OUTPUT_GFORMAT" && on_success "$FILENAME" || on_failure "$FILENAME"
+		REMOVE_SUBTITLE=""
+		if [ "$OUTPUT_GFORMAT" = "mkv" ]; then
+			REMOVE_SUBTITLE="-sn"
+		fi
+		$FFMPEG -loglevel error -stats -i "$FILENAME" -map 0 -scodec copy -vcodec "$OUTPUT_VCODEC" -acodec "$OUTPUT_ACODEC" $REMOVE_SUBTITLE "$FILENAME.$OUTPUT_GFORMAT" && on_success "$FILENAME" || on_failure "$FILENAME"
 		echo ""
 	fi
 }
