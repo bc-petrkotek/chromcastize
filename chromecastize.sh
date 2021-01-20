@@ -12,6 +12,8 @@ UNSUPPORTED_GFORMATS=('BDAV' 'AVI' 'Flash Video' 'DivX')
 SUPPORTED_VCODECS=('AVC' 'VP8')
 UNSUPPORTED_VCODECS=('MPEG-4 Visual' 'xvid' 'MPEG Video' 'HEVC')
 
+SUPPORTED_VFPROFILE=('Main@L4' 'High@L3.1' 'High@L4' 'High@L4.1')
+
 SUPPORTED_ACODECS=('AAC' 'MPEG Audio' 'Vorbis' 'Ogg' 'Opus')
 UNSUPPORTED_ACODECS=('AC-3' 'DTS' 'E-AC-3' 'MLP FBA' 'PCM' 'TrueHD' 'FLAC')
 
@@ -75,6 +77,14 @@ is_supported_vcodec() {
 	else
 		unknown_codec "$1"
 		exit 1
+	fi
+}
+
+is_supported_vfprofile() {
+	if in_array "$1" "${SUPPORTED_VFPROFILE[@]}"; then
+		return 0
+	else
+		return 1
 	fi
 }
 
@@ -168,7 +178,7 @@ process_file() {
 
 	INPUT_VCODEC=`$MEDIAINFO --Inform="Video;%Format%\n" "$FILENAME" 2> /dev/null | head -n1`
 	ENCODER_OPTIONS=""
-	if is_supported_vcodec "$INPUT_VCODEC" && [ -z "$FORCE_VENCODE" ]; then
+	if is_supported_vcodec "$INPUT_VCODEC" && is_supported_vfprofile "$INPUT_VCODEC_PROFILE" [ -z "$FORCE_VENCODE" ]; then
 		OUTPUT_VCODEC="copy"
 	else
 		OUTPUT_VCODEC="$DEFAULT_VCODEC"
